@@ -8,28 +8,28 @@ general:
   momentum: 0.95
   weight_decay: 0.00005
   optimizer_name: Adam
-  save_path: ./yamnet_weights/ICLR_CIFAR100.pth
+  save_path: ./yamnet_weights/ICLR_PathMNIST1.pth
 
   save_weights: True
   init_weight: imagnet
-  save_output: [True,'/storage/yam/Multi_Dim_CP/outputs','ICLR']
+  save_output: [True,'/storage/yam/Multi_Dim_CP/outputs','ICLR_demo']  #Change to desired location
 
 
 training_plan:
   step1:
     criterion_name: CE
-    lr_features: 0.000001
+    lr_features: 0.0001
     lr_heads: 0.0001
-    num_epochs: 200
-    trained_heads: ['all']
+    num_epochs: 20
+    trained_heads: [0]
     training_phase:
-    - retrain
+    - train_from_scratch
     - whole
   step2:
     criterion_name: CE divergence
     lr_features: 0.0001
-    lr_heads: 0.0000001
-    num_epochs: 10
+    lr_heads: 0.0001
+    num_epochs: 5
     trained_heads: ['all']
     training_phase:
       - retrain
