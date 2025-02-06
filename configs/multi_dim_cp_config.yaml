@@ -1,0 +1,13 @@
+
+
+DATASET_NAME: 'PathMNIST_ICLR'
+
+ALPHA: 0.01
+
+b: 1
+
+N_HEADS: 7
+
+SCORING_METHOD: RAPS
+
+

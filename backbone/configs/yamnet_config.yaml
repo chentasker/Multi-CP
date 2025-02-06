@@ -1,0 +1,46 @@
+general:
+  batch_size: 16
+  dataset_name: CIFAR100
+  dropout_prob: 0.1
+  heads_num: 7
+  num_classes: 100
+  num_layers: 2
+  momentum: 0.95
+  weight_decay: 0.00005
+  optimizer_name: Adam
+  save_path: ./yamnet_weights/ICLR_CIFAR100.pth
+
+  save_weights: True
+  init_weight: imagnet
+  save_output: [True,'/storage/yam/Multi_Dim_CP/outputs','ICLR']
+
+
+training_plan:
+  step1:
+    criterion_name: CE
+    lr_features: 0.000001
+    lr_heads: 0.0001
+    num_epochs: 200
+    trained_heads: ['all']
+    training_phase:
+    - retrain
+    - whole
+  step2:
+    criterion_name: CE divergence
+    lr_features: 0.0001
+    lr_heads: 0.0000001
+    num_epochs: 10
+    trained_heads: ['all']
+    training_phase:
+      - retrain
+      - part
+  step3:
+    criterion_name: CE
+    lr_features: 0.0001
+    lr_heads: 0.00001
+    num_epochs: 1
+    trained_heads: [ 'all' ]
+    training_phase:
+      - eval
+      - part
+
