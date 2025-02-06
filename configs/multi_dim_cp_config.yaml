@@ -1,6 +1,6 @@
 
 
-DATASET_NAME: 'PathMNIST_ICLR'
+DATASET_NAME: 'PathMNIST_demo'
 
 ALPHA: 0.01
 

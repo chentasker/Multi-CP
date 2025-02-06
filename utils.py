@@ -78,10 +78,10 @@ def load_data(config):
     test_output = np.load(os.path.join(os.getcwd(), 'outputs', f'test_outputs_{config["DATASET_NAME"]}.npy'))
     test_target = np.load(os.path.join(os.getcwd(), 'outputs', f'test_target_{config["DATASET_NAME"]}.npy'))
     return cal_output,cal_target,test_output,test_target
-def create_scores(data,config):
+def compute_scores(data,config):
     return  np.squeeze([get_scoring_method(config['SCORING_METHOD'])(data[idxhead], 'SCORES')
                              for idxhead in range(len(data))], axis=1)
-def generate_cal_opt_sets(cal_scores,cal_target_new):
+def generate_Dcal_Dcells_sets(cal_scores,cal_target_new):
     precal_scores, opt_scores = cal_scores[:, :cal_scores.shape[1] // 2, :], cal_scores[:,
                                                                              cal_scores.shape[1] // 2:, :]
     precal_target, opt_target = cal_target_new[:cal_target_new.shape[0] // 2], cal_target_new[
