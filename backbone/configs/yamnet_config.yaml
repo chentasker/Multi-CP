@@ -14,7 +14,6 @@ general:
   init_weight: imagnet
   save_output: [True,'/storage/yam/Multi_Dim_CP/outputs','ICLR_demo']  #Change to desired location
 
-
 training_plan:
   step1:
     criterion_name: CE
