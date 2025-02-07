@@ -48,15 +48,9 @@ def load_data(current_config, train_size_p=0.65, val_size_p=0.1, test_size_p=0.1
     val_size = int(val_size_p * num_samples)
     test_size = int(test_size_p * num_samples)
     cal_size = int(cal_size_p * num_samples)
-
     remaining_size = num_samples - train_size - val_size - test_size - cal_size
-
-    train_set, val_set, test_set, cal_set, remaining_set = random_split(
-        dataset, [train_size, val_size, test_size, cal_size, remaining_size]
-    )
+    train_set, val_set, test_set, cal_set, remaining_set = random_split(dataset, [train_size, val_size, test_size, cal_size, remaining_size])
     train_set = torch.utils.data.ConcatDataset([train_set, remaining_set])
-
-    # Create loaders for training, validation, test, and calibration sets
     train_loader = DataLoader(train_set, batch_size=current_config['current_step']['batch_size'], shuffle=True,
                               num_workers=1)
     val_loader = DataLoader(val_set, batch_size=current_config['current_step']['batch_size'], shuffle=False,
@@ -80,7 +74,6 @@ def save_best_weights(model, optimizer, epoch, val_loss, save_path):
     print(f"Best weights saved to {save_path}")
 
 
-# Assuming 'model' is an instance of ModifiedResNet50
 def load_best_weights(model, optimizer, load_path):
     checkpoint = torch.load(load_path)
     model.load_state_dict(checkpoint['model_state_dict'])

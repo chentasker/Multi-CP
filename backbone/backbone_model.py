@@ -1,4 +1,3 @@
-
 import torch.nn as nn
 import torchvision.models as models
 from load_config import *
@@ -36,12 +35,10 @@ class ModifiedResNet50(nn.Module):
         - A sequential model with adaptive pooling, flattening, and multiple linear layers.
         """
         layers = []
-
         # Adaptive Pooling and Flattening at the start
         layers.append(nn.AdaptiveAvgPool2d(output_size=(1, 1)))
         layers.append(nn.Flatten())
         init_channels = resnet50.layer4[-1].conv3.out_channels
-
         if init_channels<=num_classes:
             step_channel =  2*(num_classes - init_channels) // (current_config['current_step']['num_layers']//2)
             for _ in range(current_config['current_step']['num_layers']//2):
@@ -50,7 +47,6 @@ class ModifiedResNet50(nn.Module):
                 init_channels += step_channel
         else:
             step_channel = (init_channels - num_classes) // (current_config['current_step']['num_layers'] + 1)  # Ensure step size >= 1
-
         # Hidden layers with linear and ReLU
         for _ in range(current_config['current_step']['num_layers']):
             layers.append(nn.Linear(init_channels, init_channels - step_channel))
@@ -58,10 +54,8 @@ class ModifiedResNet50(nn.Module):
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(p=config['general']['dropout_prob']))
             init_channels -= step_channel
-
         # Final output layer
         layers.append(nn.Linear(init_channels, num_classes))
-
         # Return as a sequential model
         return nn.Sequential(*layers)
 
@@ -71,5 +65,4 @@ class ModifiedResNet50(nn.Module):
         for head in self.classification_heads:
             score = head(x)
             outputs.append(score)
-
         return outputs

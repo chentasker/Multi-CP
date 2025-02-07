@@ -9,12 +9,10 @@ def weights_switcher(model, current_config, num_header, state):
         for param in model.features.parameters():
             param.requires_grad = state[0]  # Freeze/unfreeze feature extractor
         model.features.train() if state[1] else model.features.eval()
-
     for h_idx in num_header:
         model.classification_heads[h_idx].train() if state[1] else model.classification_heads[h_idx].eval()
         for param in model.classification_heads[h_idx].parameters():
             param.requires_grad = state[0]  # Freeze/unfreeze classification heads
-
     return model
 
 
@@ -34,17 +32,10 @@ def training_loop(model,train_loader,test_loader,optimizer,criterion,device,best
 
         train_loss,model= train(model, train_loader, optimizer, criterion, device,num_header)
         val_loss, val_accuracy,_,_  = evaluate_individual_heads(model, test_loader, criterion, device)
-
         if val_loss[num_header].mean() < best_val_loss[num_header].mean():
             best_val_loss[num_header] = val_loss[num_header]
             if config['general']['save_weights']:
                 save_best_weights(model, optimizer, epoch, best_val_loss, config['general']['save_path'])
-
-        # if np.mean(val_loss)< best_val_loss:
-        #     best_val_loss = np.mean(val_loss)
-        #     if  config['general']['save_weights']:
-        #         save_best_weights(model, optimizer, epoch, best_val_loss, config['general']['save_path'])
-
         print(f"\nEpoch {epoch + 1}/{current_config['current_step']['num_epochs']}, "
               f"Train Loss: {train_loss:.4f}, "
               f"Val Loss: {val_loss} \n"
@@ -60,27 +51,21 @@ def training_loop(model,train_loader,test_loader,optimizer,criterion,device,best
 def train(model, train_loader, optimizer, criterion, device,num_header):
     running_loss = 0.0
     for data, target in tqdm(train_loader,desc="Batch Progress",ascii=True):
-
         data, target = data.to(device), target.to(device)
         total_loss=torch.zeros(1).to(device)
         optimizer.zero_grad()
-
-        # Get the outputs from all heads
         all_outputs = model(data)
         for outputs_index in num_header:
             loss = criterion(all_outputs, target.long(),outputs_index)
             total_loss += loss
         total_loss.backward()
-
         optimizer.step()
         running_loss += total_loss.item()
-
     return running_loss / len(train_loader),model
 
 def evaluate_individual_heads(model, data_loader, criterion, device):
     model.eval()
     running_losses = np.zeros(config['general']['heads_num'])
-
     corrects = [0] *config['general']['heads_num']
     results=[]
     count=-1
