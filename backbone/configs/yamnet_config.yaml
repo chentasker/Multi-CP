@@ -4,7 +4,7 @@ general:
   dropout_prob: 0.1
   heads_num: 7
   num_classes: 100
-  num_layers: 2
+  num_layers: 2  #number of head's layers, the total layers will be num_layers +1
   momentum: 0.95
   weight_decay: 0.00005
   optimizer_name: Adam
