@@ -5,7 +5,7 @@ from utils import load_data, compute_scores, generate_Dcal_Dcells_sets, create_t
 from nonconf_scores import *
 
 
-def find_closest_columns(array1, array2,phase,config):
+def find_closest_columns(array1, array2, phase,config):
     """
         Find the b nearest cell centers (Dcells_true) for each point in array2.
         creates points cloud around each center that defines the cell.
@@ -18,7 +18,7 @@ def find_closest_columns(array1, array2,phase,config):
             np.ndarray: Indices of the b closest columns in array1 for each column in array2.
     """
     tree = KDTree(array1.T)
-    if phase=='cal':
+    if phase == 'cal':
         closest_indices = tree.query(array2.T)[1]
     elif phase == 'test':
      closest_indices = tree.query(array2.T,k=config['b'])[1]
@@ -53,10 +53,10 @@ def segment_S_and_rank_cells(Dcells_true : np.ndarray, Dcells_rest : np.ndarray,
     closest_center_idx_to_rest_points_unique,count_of_rest_points_belongs_to_center_idx_unique=np.unique(closest_center_idx_to_rest_points, return_counts=True)
     # calc score according to eq. (9)
     total_score = np.ones(count_Dcells_points_in_center.shape)
-    total_score[closest_center_idx_to_rest_points_unique] = +count_of_rest_points_belongs_to_center_idx_unique
+    total_score[closest_center_idx_to_rest_points_unique] += count_of_rest_points_belongs_to_center_idx_unique
     total_score = total_score / count_Dcells_points_in_center
     #Rank the cells and select initial selected cells (Line 7)
-    wanted_centers,alpha_hat=calculate_psudo_selected_cells_idx(total_score, count_Dcells_points_in_center, Dcells_true_unique,alpha)
+    wanted_centers,alpha_hat = calculate_psudo_selected_cells_idx(total_score, count_Dcells_points_in_center, Dcells_true_unique,alpha)
     return wanted_centers,Dcells_true_unique,alpha_hat,count_Dcells_points_in_center,total_score
 
 def  calculate_psudo_selected_cells_idx(total_score : np.ndarray, count_Dcells_points_in_center : np.ndarray, Dcells_true_unique : np.ndarray,alpha : float):
@@ -74,7 +74,7 @@ def  calculate_psudo_selected_cells_idx(total_score : np.ndarray, count_Dcells_p
             alpha_hat: Adjusted alpha value.
     """
 
-    n_samples=total_score.shape[0]
+    n_samples = total_score.shape[0]
     alpha_hat = (n_samples + 1) * (1 - alpha)/ n_samples  #fixing alpha value
     ordered_indexes = np.argsort(total_score)
     # Select centers according to rank until α̂ percent of Dcells_points_in_center is part of the chosen cells.
@@ -84,7 +84,7 @@ def  calculate_psudo_selected_cells_idx(total_score : np.ndarray, count_Dcells_p
 
 
 
-def main_algo(Dcells_scores: np.ndarray , Dcells_target: np.ndarray ,Dre_cal_scores: np.ndarray ,Dre_cal_target: np.ndarray ,test_scores: np.ndarray ,test_target: np.ndarray ,alpha: float ,config :dict ):
+def main_algo(Dcells_scores: np.ndarray, Dcells_target: np.ndarray, Dre_cal_scores: np.ndarray, Dre_cal_target: np.ndarray, test_scores: np.ndarray, test_target: np.ndarray, alpha: float, config :dict ):
     """
         This is the main part of the Soft Multi-Score Conformal Prediction Algorithm as presented in the article (B.2).
         Lines 4-16 of the algorithm are executed from here.
@@ -116,7 +116,7 @@ def main_algo(Dcells_scores: np.ndarray , Dcells_target: np.ndarray ,Dre_cal_sco
 
     Dcells_true, Dcells_rest = create_true_rest_sets(Dcells_scores, Dcells_target, 'CAL')
     wanted_coverage_achived=False
-    alpha_init=alpha
+    alpha_init = alpha
     wanted_centers, Dcells_true_unique, alpha_hat, count_Dcells_points_in_center, total_score = segment_S_and_rank_cells(Dcells_true, Dcells_rest, alpha_init,config)
     closest_opt_points_idxs = find_closest_columns(Dcells_true_unique, Dre_cal_scores.reshape(Dre_cal_scores.shape[0], -1),'test',config)
     closest_test_points_idxs = find_closest_columns(Dcells_true_unique, test_scores.reshape(test_scores.shape[0], -1),'test',config)
@@ -127,12 +127,12 @@ def main_algo(Dcells_scores: np.ndarray , Dcells_target: np.ndarray ,Dre_cal_sco
     while not wanted_coverage_achived:
         wanted_centers = np.arange(count_Dcells_points_in_center.shape[0])[ordered_indexes][:min(count_Dcells_points_in_center.shape[0],wanted_centers.shape[0]+1)]
         coverage,mean_set,_=test_bins(Dre_cal_scores, Dre_cal_target, wanted_centers, Dcells_true_unique,closest_opt_points_idxs,config)
-        if coverage>=1-alpha:
-            wanted_coverage_achived=True
-    coverage, mean_set ,result_mat= test_bins(test_scores, test_target, wanted_centers, Dcells_true_unique,closest_test_points_idxs,config)
+        if coverage >= 1-alpha:
+            wanted_coverage_achived = True
+    coverage, mean_set ,result_mat = test_bins(test_scores, test_target, wanted_centers, Dcells_true_unique,closest_test_points_idxs,config)
     return coverage,mean_set,result_mat,(wanted_centers,Dcells_true_unique)
 
-def test_bins(test_score : np.ndarray, test_target : np.ndarray, wanted_centers : np.ndarray, Dcells_true_unique : np.ndarray,closest_test_points_idxs : np.ndarray,config : dict):
+def test_bins(test_score : np.ndarray, test_target : np.ndarray, wanted_centers : np.ndarray, Dcells_true_unique : np.ndarray, closest_test_points_idxs : np.ndarray, config : dict):
     """
         Check whether the majority of the b closest neighbors of a label's score are in the selected cells.
         This function is used both in Lines 9-10 of the algorithm and during the evaluation phase.
@@ -169,7 +169,7 @@ def test_bins(test_score : np.ndarray, test_target : np.ndarray, wanted_centers 
         flaten_zero_columns=test_score[:,zero_rows, :].reshape(n_dims,-1)
         tree_zeros = KDTree(Dcells_true_unique[:,wanted_centers].T)
         distances,closest_zero_indices = tree_zeros.query(flaten_zero_columns.T)
-        force_one_idx=np.argmin(distances.reshape(-1, n_labels), axis=1)
+        force_one_idx = np.argmin(distances.reshape(-1, n_labels), axis=1)
         result_mat[zero_rows, force_one_idx]=True
 
     return result_mat[range(len(result_mat)), test_target.astype(int)].sum() / len(result_mat), result_mat.sum(
@@ -178,15 +178,15 @@ def test_bins(test_score : np.ndarray, test_target : np.ndarray, wanted_centers 
 
 def run(config : dict):
 
-    cal_output,cal_target,test_output,test_target=load_data(config) # Load the backbone's outputs (cal&test sets)
+    cal_output,cal_target,test_output,test_target = load_data(config) # Load the backbone's outputs (cal&test sets)
     validate_config(cal_output,cal_target,config)       # Validate the config file
     cal_output_new, cal_target_new, test_output_new, test_target_new = create_random_split(cal_output[:config['N_HEADS'], :, :], cal_target, test_output[:config['N_HEADS'], :, :], test_target)        # shuffle the test&cal sets and take the n_heads heads's outputs
-    cal_scores =compute_scores(cal_output_new,config)   #calculate the nonconformity score
-    test_scores =compute_scores(test_output_new,config)
-    Dcells_scores,Dcells_target,Dre_cal_scores,Dre_cal_target=generate_Dcal_Dcells_sets(cal_scores, cal_target_new) #split  Dcal to Dcells and Dre-cal
+    cal_scores = compute_scores(cal_output_new,config)   #calculate the nonconformity score
+    test_scores = compute_scores(test_output_new,config)
+    Dcells_scores,Dcells_target,Dre_cal_scores,Dre_cal_target = generate_Dcal_Dcells_sets(cal_scores, cal_target_new) #split  Dcal to Dcells and Dre-cal
 
     coverage, mean_set,prediction_sets_new_meth,_ = main_algo(Dcells_scores, Dcells_target,Dre_cal_scores, Dre_cal_target, test_scores,test_target_new, config['ALPHA'],config)
-    print(f"\n################################## Results ##################################\n")
+    print(f"\n{' Results ':#^50}\n")
     print(f"Coverage archived: {coverage}\n")
     print(f"Coverage wanted: {1-config['ALPHA']}\n")
     print(f"Mean-Predicted-Set-Size: {mean_set}\n")
@@ -196,8 +196,8 @@ def run(config : dict):
 
 
 if __name__=="__main__":
-    config_name='multi_dim_cp_config'
-    config=load_config(config_name)
+    config_name = 'multi_dim_cp_config'
+    config = load_config(config_name)
     run(config)
 
 
