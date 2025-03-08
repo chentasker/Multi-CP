@@ -27,7 +27,7 @@ def main(current_config):
         np.save(f"{save_dir}/test_outputs_{config['general']['dataset_name']}_{save_name}.npy", softmax(test_output,axis=2))
         np.save(f"{save_dir}/cal_outputs_{config['general']['dataset_name']}_{save_name}.npy", softmax(cal_output,axis=2))
         np.save(f"{save_dir}/cal_target_{config['general']['dataset_name']}_{save_name}.npy", cal_targets)
-        np.save(f"{save_dir}/test_target_{config['general']['dataset_name']}_{save_name}v.npy", test_targets)
+        np.save(f"{save_dir}/test_target_{config['general']['dataset_name']}_{save_name}.npy", test_targets)
     print(f"Test Loss: {np.array(test_loss).mean()}, Test Accuracy: {np.array(test_accuracy).mean()}")
 
 

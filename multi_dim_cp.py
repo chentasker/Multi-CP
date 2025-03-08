@@ -48,13 +48,14 @@ def segment_S_and_rank_cells(Dcells_true : np.ndarray, Dcells_rest : np.ndarray,
     n_dims = Dcells_true.shape[0]
     cal_rest_flat = Dcells_rest.reshape(n_dims, -1)
     Dcells_true_unique, count_Dcells_points_in_center = np.unique(Dcells_true, axis=1, return_counts=True) # Remove duplicate centers (Line 6)
+    print(count_Dcells_points_in_center[count_Dcells_points_in_center!=1])
     # generate cells
     closest_center_idx_to_rest_points = find_closest_columns(Dcells_true_unique,cal_rest_flat,'cal',config)
     closest_center_idx_to_rest_points_unique,count_of_rest_points_belongs_to_center_idx_unique=np.unique(closest_center_idx_to_rest_points, return_counts=True)
     # calc score according to eq. (9)
-    total_score = np.ones(count_Dcells_points_in_center.shape)
+    total_score = np.zeros(count_Dcells_points_in_center.shape)
     total_score[closest_center_idx_to_rest_points_unique] += count_of_rest_points_belongs_to_center_idx_unique
-    total_score = total_score / count_Dcells_points_in_center
+    total_score = (total_score / count_Dcells_points_in_center)+1
     #Rank the cells and select initial selected cells (Line 7)
     wanted_centers,alpha_hat = calculate_psudo_selected_cells_idx(total_score, count_Dcells_points_in_center, Dcells_true_unique,alpha)
     return wanted_centers,Dcells_true_unique,alpha_hat,count_Dcells_points_in_center,total_score
