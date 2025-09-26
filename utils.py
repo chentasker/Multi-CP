@@ -34,8 +34,8 @@ def validate_config(cal_output, cal_target, config):
     if errors:
         raise ValueError("\n".join(errors))
 
-
-def create_true_rest_sets(scores: np.ndarray,target: np.ndarray,stage: str)-> (tuple,tuple):
+# Splits model scores into true-class vs. rest-class predictions, using actual labels (CAL) or all classes (VAL)
+def create_true_rest_sets(scores: np.ndarray, target: np.ndarray, stage: str)-> (tuple,tuple):
     """
     inputs:
     scores: shape ( num heads, num_samples,num_class)
@@ -58,6 +58,8 @@ def create_true_rest_sets(scores: np.ndarray,target: np.ndarray,stage: str)-> (t
         true_preds, rest_preds_concat = zip(*results)
 
     return true_preds, rest_preds_concat
+
+# Redistribute samples randomly between calibration and test sets
 def create_random_split(cal_output, cal_target, test_output, test_target):
     big_output = np.concatenate((cal_output, test_output), axis=1)
     big_target = np.concatenate((cal_target, test_target), axis=0)
@@ -72,22 +74,19 @@ def create_random_split(cal_output, cal_target, test_output, test_target):
     test_output_new = big_output[:, test_indices, :]
     test_target_new = big_target[test_indices]
     return cal_output_new, cal_target_new, test_output_new, test_target_new
+
+# Load data from .npy files
 def load_data(config):
     cal_output = np.load(os.path.join(os.getcwd(), 'outputs', f'cal_outputs_{config["DATASET_NAME"]}.npy'))
     cal_target = np.load(os.path.join(os.getcwd(), 'outputs', f'cal_target_{config["DATASET_NAME"]}.npy'))
     test_output = np.load(os.path.join(os.getcwd(), 'outputs', f'test_outputs_{config["DATASET_NAME"]}.npy'))
     test_target = np.load(os.path.join(os.getcwd(), 'outputs', f'test_target_{config["DATASET_NAME"]}.npy'))
     return cal_output,cal_target,test_output,test_target
+
+# Compute scores using the specified scoring method
 def compute_scores(data,config):
     return  np.squeeze([get_scoring_method(config['SCORING_METHOD'])(data[idxhead], 'SCORES')
                              for idxhead in range(len(data))], axis=1)
-def generate_Dcal_Dcells_sets(cal_scores,cal_target_new):
-    precal_scores, opt_scores = cal_scores[:, :cal_scores.shape[1] // 2, :], cal_scores[:,
-                                                                             cal_scores.shape[1] // 2:, :]
-    precal_target, opt_target = cal_target_new[:cal_target_new.shape[0] // 2], cal_target_new[
-                                                                               cal_target_new.shape[0] // 2:]
-    return precal_scores,precal_target,opt_scores,opt_target
-
 def get_scoring_method(method_name):
     if method_name=='RAPS':
         return conf_score_RAPS
@@ -98,3 +97,11 @@ def get_scoring_method(method_name):
     elif method_name=='APS':
         return conf_score_APS
     raise ValueError("Scoring method is not recognized, choose one of RAPS, SAPS , NAIVE , APS")
+
+# Split calibration data into two equal parts for Dcal and Dval
+def generate_Dcal_Dcells_sets(cal_scores,cal_target_new):
+    precal_scores, opt_scores = cal_scores[:, :cal_scores.shape[1] // 2, :], cal_scores[:,
+                                                                             cal_scores.shape[1] // 2:, :]
+    precal_target, opt_target = cal_target_new[:cal_target_new.shape[0] // 2], cal_target_new[
+                                                                               cal_target_new.shape[0] // 2:]
+    return precal_scores,precal_target,opt_scores,opt_target
